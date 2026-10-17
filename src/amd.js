@@ -103,7 +103,7 @@ function buildPrompt(rule, lines, language) {
   ];
 }
 
-async function callOnce(rule, lines, language, temperature) {
+async function callOnce(rule, lines, language, temperature, model = MODEL) {
   const started = Date.now();
   let lastError = 'unknown';
 
@@ -117,7 +117,7 @@ async function callOnce(rule, lines, language, temperature) {
           authorization: `Bearer ${API_KEY}`,
         },
         body: JSON.stringify({
-          model: MODEL,
+          model,
           messages: buildPrompt(rule, lines, language),
           temperature,
           max_tokens: 300,
@@ -209,13 +209,13 @@ function mockOnce(rule, lines, language, temperature, index) {
  * of short completions served concurrently costs little more wall-clock time
  * than one, which is what makes generate-many-then-verify affordable.
  */
-export async function explainRule(rule, lines, language, count = 6) {
+export async function explainRule(rule, lines, language, count = 4, model = MODEL) {
   const temperatures = Array.from({ length: count }, (_, i) => 0.2 + i * 0.15);
   const started = Date.now();
 
   const candidates = await Promise.all(
     temperatures.map((t, i) =>
-      usingMock ? mockOnce(rule, lines, language, t, i) : callOnce(rule, lines, language, t),
+      usingMock ? mockOnce(rule, lines, language, t, i) : callOnce(rule, lines, language, t, model),
     ),
   );
 
@@ -233,6 +233,32 @@ export async function explainRule(rule, lines, language, count = 6) {
   };
 
   return { candidates, wallMs: wall, serialMs: serial };
+}
+
+export const defaultModel = MODEL;
+
+let modelCache = null;
+
+/**
+ * The models the endpoint actually serves. Used by the console's model picker so
+ * an operator — or a judge — can watch the verifier's behaviour change with the
+ * model behind it.
+ */
+export async function listModels() {
+  if (modelCache) return modelCache;
+  if (usingMock) return (modelCache = ['mock']);
+  try {
+    const res = await fetch(`${BASE_URL}/models`, {
+      headers: { authorization: `Bearer ${API_KEY}` },
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!res.ok) return [MODEL];
+    const list = (await res.json()).data ?? [];
+    modelCache = list.map((m) => m.id);
+    return modelCache;
+  } catch {
+    return [MODEL];
+  }
 }
 
 export function telemetrySnapshot() {

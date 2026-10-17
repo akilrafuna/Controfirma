@@ -21,14 +21,9 @@
   }
   * { box-sizing: border-box; }
   body {
-    margin: 0;
-    background: var(--bg);
-    color: var(--text);
+    margin: 0; background: var(--bg); color: var(--text);
     font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    min-height: 100vh;
   }
-  code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
-
   header {
     display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between;
     padding: 18px 22px; border-bottom: 1px solid var(--line); background: var(--panel);
@@ -39,47 +34,56 @@
   .amd {
     display: grid; grid-template-columns: auto auto; gap: 2px 14px;
     padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px;
-    background: var(--panel-2); font-size: 11.5px;
+    background: var(--panel-2); font-size: 11.5px; min-width: 210px;
   }
   .amd dt { color: var(--dimmer); }
-  .amd dd { margin: 0; text-align: right; }
+  .amd dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
   .amd-head {
     grid-column: 1 / -1; display: flex; align-items: center; gap: 7px;
     margin-bottom: 5px; padding-bottom: 6px; border-bottom: 1px solid var(--line);
     color: var(--dim); letter-spacing: .1em; font-size: 10px; text-transform: uppercase;
   }
   .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--amd); flex: none; }
+  .amd select {
+    grid-column: 1 / -1; margin-top: 7px; width: 100%; font-size: 11.5px; padding: 5px 7px;
+  }
 
   main { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 1px; background: var(--line); }
   @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
   section { background: var(--bg); padding: 20px 22px; min-width: 0; }
 
+  .tabs { display: flex; gap: 4px; margin-bottom: 14px; }
+  .tabs button {
+    flex: 1; background: transparent; border: 1px solid var(--line); color: var(--dim);
+    border-radius: 7px; padding: 7px 10px; font-size: 12.5px;
+  }
+  .tabs button[aria-selected="true"] { background: var(--panel-2); color: var(--text); border-color: var(--dimmer); }
+
   .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 8px; }
-  select, button {
+  select, button, textarea {
     font: inherit; color: var(--text); background: var(--panel-2);
     border: 1px solid var(--line); border-radius: 7px; padding: 8px 12px;
   }
-  select { flex: 1 1 220px; min-width: 0; }
+  select { flex: 1 1 200px; min-width: 0; }
   button { cursor: pointer; }
   button:hover:not(:disabled) { border-color: var(--dimmer); }
   button:disabled { opacity: .45; cursor: default; }
   button.primary { background: #e8eaee; color: #0a0c10; border-color: #e8eaee; font-weight: 600; }
   .scenario { color: var(--dim); font-size: 12.5px; margin: 0 0 16px; min-height: 2.6em; }
 
-  h2 {
-    font-size: 10.5px; text-transform: uppercase; letter-spacing: .12em;
-    color: var(--dimmer); margin: 0 0 12px; font-weight: 600;
+  textarea {
+    width: 100%; min-height: 190px; resize: vertical; line-height: 1.6;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12.5px;
   }
+  .hint { color: var(--dimmer); font-size: 11.5px; margin: 7px 0 11px; }
+
+  h2 { font-size: 10.5px; text-transform: uppercase; letter-spacing: .12em; color: var(--dimmer); margin: 0 0 12px; font-weight: 600; }
   .section-gap { margin-top: 26px; }
 
-  /* transcript */
-  .transcript { display: flex; flex-direction: column; gap: 9px; min-height: 180px; }
+  .transcript { display: flex; flex-direction: column; gap: 9px; min-height: 160px; }
   .utt { display: flex; gap: 11px; animation: rise .25s ease-out; }
   @keyframes rise { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
-  .who {
-    flex: none; width: 52px; font-size: 10px; letter-spacing: .08em; text-transform: uppercase;
-    color: var(--dimmer); padding-top: 3px;
-  }
+  .who { flex: none; width: 52px; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--dimmer); padding-top: 3px; }
   .utt.caller .who { color: var(--hold); }
   .said {
     background: var(--panel); border: 1px solid var(--line); border-left: 2px solid var(--line);
@@ -88,13 +92,9 @@
   .utt.caller .said { border-left-color: var(--hold); }
   .said mark { background: rgba(255,77,79,.22); color: #ffd9d9; border-radius: 3px; padding: 0 2px; }
   .live { display: inline-flex; align-items: center; gap: 6px; color: var(--hold); font-size: 11px; }
-  .live::before {
-    content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--hold);
-    animation: pulse 1.1s infinite;
-  }
+  .live::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--hold); animation: pulse 1.1s infinite; }
   @keyframes pulse { 50% { opacity: .25; } }
 
-  /* gauge */
   .score { display: flex; align-items: baseline; gap: 11px; margin-bottom: 9px; }
   .score b { font-size: 34px; line-height: 1; font-variant-numeric: tabular-nums; }
   .level { font-size: 11px; letter-spacing: .13em; padding: 4px 9px; border-radius: 5px; font-weight: 700; }
@@ -102,7 +102,7 @@
   .level.REVIEW { background: rgba(255,169,64,.16); color: var(--review); }
   .level.LOW { background: rgba(82,196,26,.14); color: var(--low); }
 
-  .bar { height: 7px; border-radius: 4px; background: var(--panel-2); overflow: hidden; position: relative; }
+  .bar { height: 7px; border-radius: 4px; background: var(--panel-2); overflow: hidden; }
   .bar i { display: block; height: 100%; width: 0; background: var(--low); transition: width .4s ease, background .4s ease; }
   .bar.REVIEW i { background: var(--review); }
   .bar.HOLD i { background: var(--hold); }
@@ -116,44 +116,32 @@
   .action.REVIEW { border-left-color: var(--review); }
   .action.LOW { border-left-color: var(--low); }
 
-  /* markers */
-  .marker {
-    border: 1px solid var(--line); border-radius: 8px; background: var(--panel);
-    padding: 11px 13px; margin-bottom: 9px; animation: rise .25s ease-out;
-  }
+  .marker { border: 1px solid var(--line); border-radius: 8px; background: var(--panel); padding: 11px 13px; margin-bottom: 9px; animation: rise .25s ease-out; }
   .marker-top { display: flex; gap: 10px; align-items: baseline; justify-content: space-between; }
   .marker-top strong { font-size: 13px; }
   .w { color: var(--dimmer); font-size: 11px; flex: none; }
-  .quote {
-    margin: 8px 0 0; padding: 7px 10px; border-left: 2px solid var(--hold);
-    background: rgba(255,77,79,.07); font-size: 12.5px; color: #ffd9d9;
-  }
+  .quote { margin: 8px 0 0; padding: 7px 10px; border-left: 2px solid var(--hold); background: rgba(255,77,79,.07); font-size: 12.5px; color: #ffd9d9; }
   .note { margin: 8px 0 0; color: var(--dim); font-size: 12px; }
-  .explain { margin: 9px 0 0; font-size: 12.5px; }
-  .combo {
-    border: 1px dashed var(--line); border-radius: 7px; padding: 9px 12px; margin-bottom: 9px;
-    font-size: 12.5px; background: rgba(255,169,64,.05);
-  }
+  .explain { margin: 9px 0 0; font-size: 12.5px; padding-top: 8px; border-top: 1px solid var(--line); }
+  .explain.pending { color: var(--dimmer); font-style: italic; }
+  .explain.fail { color: var(--hold); }
+  .combo { border: 1px dashed var(--line); border-radius: 7px; padding: 9px 12px; margin-bottom: 9px; font-size: 12.5px; background: rgba(255,169,64,.05); }
   .combo b { color: var(--review); }
 
-  /* verification */
-  .vstats { display: grid; grid-template-columns: repeat(auto-fit, minmax(92px, 1fr)); gap: 9px; }
+  .vstats { display: grid; grid-template-columns: repeat(auto-fit, minmax(88px, 1fr)); gap: 9px; }
   .stat { border: 1px solid var(--line); border-radius: 7px; padding: 10px; background: var(--panel); }
   .stat b { display: block; font-size: 21px; font-variant-numeric: tabular-nums; }
   .stat span { color: var(--dimmer); font-size: 10.5px; }
-  .rejected {
-    margin-top: 10px; border: 1px solid var(--line); border-radius: 7px;
-    background: var(--panel); padding: 11px 13px; font-size: 12.5px;
-  }
+  .rejected { margin-top: 10px; border: 1px solid var(--line); border-radius: 7px; background: var(--panel); padding: 11px 13px; font-size: 12.5px; }
   .rejected h3 { margin: 0 0 8px; font-size: 11px; color: var(--hold); letter-spacing: .06em; text-transform: uppercase; }
   .rej { padding: 7px 0; border-top: 1px solid var(--line); color: var(--dim); }
   .rej:first-of-type { border-top: 0; padding-top: 0; }
-  .rej q { color: var(--dimmer); text-decoration: line-through; }
+  .rej q { color: var(--dimmer); text-decoration: line-through; display: block; }
   .rej em { color: var(--hold); font-style: normal; display: block; font-size: 11.5px; margin-top: 3px; }
 
   .decide { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
   .decide button { flex: 1 1 140px; }
-  .outcome { margin-top: 11px; font-size: 12.5px; color: var(--low); }
+  .outcome { margin-top: 11px; font-size: 12.5px; color: var(--low); min-height: 1.4em; }
   .empty { color: var(--dimmer); font-size: 12.5px; }
   footer { padding: 16px 22px; border-top: 1px solid var(--line); color: var(--dimmer); font-size: 11.5px; }
 </style>
@@ -165,29 +153,47 @@
     <h1>CONTROFIRMA</h1>
     <p>Impersonation markers on live payment calls. Rules decide, the model only explains, a person signs.</p>
   </div>
-  <dl class="amd" id="amd">
+  <dl class="amd">
     <div class="amd-head"><span class="dot"></span> AMD inference</div>
-    <dt>model</dt><dd id="t-model">—</dd>
     <dt>batch</dt><dd id="t-batch">—</dd>
     <dt>latency</dt><dd id="t-lat">—</dd>
     <dt>requests</dt><dd id="t-req">—</dd>
     <dt>tokens</dt><dd id="t-tok">—</dd>
+    <dt>cost</dt><dd id="t-cost">—</dd>
+    <select id="model" title="Model serving the explanations"></select>
   </dl>
 </header>
 
 <main>
   <section>
-    <div class="controls">
-      <select id="pick"></select>
-      <button class="primary" id="play">Start call</button>
-      <button id="reset">Reset</button>
-      <span id="liveflag"></span>
+    <div class="tabs">
+      <button id="tab-replay" aria-selected="true">Replay a call</button>
+      <button id="tab-own" aria-selected="false">Write your own</button>
     </div>
-    <p class="scenario" id="scenario"></p>
 
-    <h2>Transcript</h2>
+    <div id="pane-replay">
+      <div class="controls">
+        <select id="pick"></select>
+        <button class="primary" id="play">Start call</button>
+        <button id="reset">Reset</button>
+        <span id="liveflag"></span>
+      </div>
+      <p class="scenario" id="scenario"></p>
+    </div>
+
+    <div id="pane-own" hidden>
+      <textarea id="own" spellcheck="false"></textarea>
+      <p class="hint">One line each. Start a line with <code>caller:</code> or <code>staff:</code> — anything unmarked counts as the caller. Only the caller's words are ever used as evidence.</p>
+      <div class="controls">
+        <button class="primary" id="run-own">Analyse this call</button>
+        <button id="clear-own">Clear</button>
+        <span id="ownflag"></span>
+      </div>
+    </div>
+
+    <h2 class="section-gap">Transcript</h2>
     <div class="transcript" id="transcript">
-      <p class="empty">Pick a call and press start. Lines arrive as they are spoken.</p>
+      <p class="empty">Pick a call and press start, or write your own.</p>
     </div>
   </section>
 
@@ -209,7 +215,7 @@
 
     <h2 class="section-gap">Explanation verification</h2>
     <div class="vstats">
-      <div class="stat"><b id="v-gen">0</b><span>generated</span></div>
+      <div class="stat"><b id="v-gen">0</b><span>returned</span></div>
       <div class="stat"><b id="v-pass">0</b><span>verified</span></div>
       <div class="stat"><b id="v-rej">0</b><span>rejected</span></div>
     </div>
@@ -222,17 +228,32 @@
 <script type="module">
 const $ = (id) => document.getElementById(id);
 const PACE = 1500;
+const EXPLAIN_LIMIT = 4;   // markers explained live; the rest are still scored and cited
 
 let DATA = null;
 let call = null;
 let spoken = [];
 let timer = null;
+let finding = { total: 0, level: 'LOW', action: 'No markers yet.', firedRules: [], combinations: [] };
+
+/** ruleId -> {state:'pending'|'done', explanation} */
+const explained = new Map();
+
+const SAMPLE = `caller: Buonasera, sono l'avvocato Ferrara, studio legale che assiste il presidente.
+staff: Mi dica.
+caller: Non ne parli con la direzione finanziaria, nemmeno con il CFO.
+caller: Serve un bonifico urgente entro un'ora.
+caller: Non serve la seconda firma, autorizzo io.`;
 
 async function boot() {
   DATA = await (await fetch('/api/calls')).json();
   $('pick').innerHTML = DATA.calls
     .map((c, i) => `<option value="${i}">${c.expected === 'fraud' ? '🔴' : '🟢'} ${c.title}</option>`)
     .join('');
+  $('model').innerHTML = DATA.models
+    .map((m) => `<option value="${m}"${m === DATA.defaultModel ? ' selected' : ''}>${m}</option>`)
+    .join('');
+  $('own').value = SAMPLE;
   $('pick').onchange = select;
   select();
   if (DATA.mock) {
@@ -242,32 +263,10 @@ async function boot() {
   refreshTelemetry();
 }
 
-function select() {
-  stop();
-  call = DATA.calls[Number($('pick').value)];
-  spoken = [];
-  $('scenario').textContent = call.note;
-  $('transcript').innerHTML = '<p class="empty">Press start.</p>';
-  $('markers').innerHTML = '<p class="empty">Nothing fired.</p>';
-  $('rejected').innerHTML = '';
-  $('outcome').textContent = '';
-  $('btn-hold').disabled = $('btn-release').disabled = true;
-  for (const id of ['v-gen', 'v-pass', 'v-rej']) $(id).textContent = '0';
-  paint({ total: 0, level: 'LOW', action: 'No markers yet.', firedRules: [], combinations: [] });
-}
-
-function stop() {
-  clearInterval(timer);
-  timer = null;
-  $('play').disabled = false;
-  $('liveflag').innerHTML = '';
-}
-
 function escape(s) {
-  return s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  return String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 }
 
-/** Highlight the exact spans the rules matched, so the evidence is visible in the words. */
 function withHighlights(text, quotes) {
   let html = escape(text);
   for (const q of [...new Set(quotes)].sort((a, b) => b.length - a.length)) {
@@ -277,17 +276,17 @@ function withHighlights(text, quotes) {
   return html;
 }
 
-function drawTranscript(finding) {
+function drawTranscript() {
   const quotes = finding.citableQuotes ?? [];
-  $('transcript').innerHTML = spoken
-    .map((l) => `<div class="utt ${l.speaker}">
+  $('transcript').innerHTML = spoken.length
+    ? spoken.map((l) => `<div class="utt ${l.speaker}">
         <div class="who">${l.speaker === 'caller' ? 'caller' : 'staff'}</div>
         <div class="said">${l.speaker === 'caller' ? withHighlights(l.text, quotes) : escape(l.text)}</div>
-      </div>`)
-    .join('');
+      </div>`).join('')
+    : '<p class="empty">Nothing yet.</p>';
 }
 
-function paint(finding) {
+function drawRisk() {
   $('total').textContent = finding.total;
   $('level').textContent = finding.level;
   $('level').className = 'level ' + finding.level;
@@ -295,97 +294,178 @@ function paint(finding) {
   $('bar').firstElementChild.style.width = Math.min(100, (finding.total / 140) * 100) + '%';
   $('action').textContent = finding.action;
   $('action').className = 'action ' + finding.level;
+}
 
+function drawMarkers() {
   const combos = (finding.combinations ?? [])
     .map((c) => `<div class="combo"><b>${c.ids.join(' + ')}</b> — ${escape(c.note)} <span class="w">+${c.bonus}</span></div>`)
     .join('');
 
-  const markers = (finding.firedRules ?? [])
-    .map((r) => {
-      const e = r.evidence?.[0];
-      const explanation = finding.explanations?.find((x) => x.ruleId === r.id);
-      return `<div class="marker">
-        <div class="marker-top"><strong>${r.label.en}</strong><span class="w">+${r.weight}</span></div>
-        ${e ? `<p class="quote">“${escape(e.fullLine)}”</p>` : ''}
-        <p class="note">${escape(r.note)}</p>
-        ${explanation
-          ? explanation.unexplained
-            ? `<p class="explain" style="color:var(--hold)">No explanation passed verification. Marker shown without one.</p>`
-            : `<p class="explain">${escape(explanation.text)}</p>`
-          : ''}
-      </div>`;
-    })
-    .join('');
+  const markers = (finding.firedRules ?? []).map((r) => {
+    const slot = explained.get(r.id);
+    const e = r.evidence?.[0];
+    let explanation = '';
+    if (slot?.state === 'pending') {
+      explanation = `<p class="explain pending">explaining on ${escape(slot.model)}…</p>`;
+    } else if (slot?.state === 'done') {
+      explanation = slot.explanation.unexplained
+        ? `<p class="explain fail">No explanation survived verification. The marker stands on its own evidence.</p>`
+        : `<p class="explain">${escape(slot.explanation.text)}</p>`;
+    }
+    return `<div class="marker">
+      <div class="marker-top"><strong>${escape(r.label.en)}</strong><span class="w">+${r.weight}</span></div>
+      ${e ? `<p class="quote">“${escape(e.fullLine)}”</p>` : ''}
+      <p class="note">${escape(r.note)}</p>
+      ${explanation}
+    </div>`;
+  }).join('');
 
   $('markers').innerHTML = combos + markers || '<p class="empty">Nothing fired.</p>';
 }
 
-function paintVerification(result) {
-  const v = result.verification ?? {};
-  $('v-gen').textContent = v.generated ?? 0;
-  $('v-pass').textContent = v.passed ?? 0;
-  $('v-rej').textContent = v.rejected ?? 0;
+function drawVerification() {
+  let gen = 0, pass = 0, rej = 0;
+  const rejects = [];
+  for (const slot of explained.values()) {
+    if (slot.state !== 'done') continue;
+    gen += slot.explanation.generated ?? 0;
+    pass += slot.explanation.passed ?? 0;
+    rej += slot.explanation.rejected?.length ?? 0;
+    rejects.push(...(slot.explanation.rejected ?? []));
+  }
+  $('v-gen').textContent = gen;
+  $('v-pass').textContent = pass;
+  $('v-rej').textContent = rej;
 
-  const rejects = (result.explanations ?? []).flatMap((e) => e.rejected);
   $('rejected').innerHTML = rejects.length
-    ? `<div class="rejected"><h3>Thrown away before anyone saw it</h3>${rejects
-        .slice(0, 6)
-        .map((r) => `<div class="rej"><q>${escape(r.text || '(empty)')}</q><em>${escape(r.reason)}${
-          r.badQuote ? ` — “${escape(r.badQuote)}” was never said` : ''
-        }</em></div>`)
-        .join('')}</div>`
+    ? `<div class="rejected"><h3>Thrown away before anyone saw it</h3>${rejects.slice(0, 6).map((r) =>
+        `<div class="rej"><q>${escape((r.text || '(empty response)').slice(0, 240))}</q><em>${escape(r.reason)}${
+          r.badQuote ? ` — “${escape(r.badQuote)}” was never said` : ''}</em></div>`).join('')}</div>`
     : '';
 }
+
+function render() { drawTranscript(); drawRisk(); drawMarkers(); drawVerification(); }
 
 async function refreshTelemetry() {
   try {
     const t = await (await fetch('/api/telemetry')).json();
-    $('t-model').textContent = t.model;
     $('t-batch').textContent = t.maxBatchSize ? `${t.maxBatchSize} parallel` : '—';
-    $('t-lat').textContent = t.avgLatencyMs ? `${t.avgLatencyMs} ms` : '—';
-    $('t-req').textContent = t.requests;
+    $('t-lat').textContent = t.avgLatencyMs ? `${(t.avgLatencyMs / 1000).toFixed(1)} s` : '—';
+    $('t-req').textContent = t.failures ? `${t.requests} (${t.failures} lost)` : t.requests;
     $('t-tok').textContent = t.totalTokens.toLocaleString();
+    $('t-cost').textContent = t.costUsd ? `$${t.costUsd.toFixed(5)}` : '—';
   } catch {}
+}
+
+/** Fire an explanation the moment a marker appears, rather than at the end of the call. */
+function explainIfNew(rule) {
+  if (explained.has(rule.id) || explained.size >= EXPLAIN_LIMIT) return;
+  const model = $('model').value;
+  explained.set(rule.id, { state: 'pending', model });
+  drawMarkers();
+
+  fetch('/api/explain', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ lines: spoken, ruleId: rule.id, language: call?.language ?? 'it', model }),
+  })
+    .then((r) => r.json())
+    .then((explanation) => {
+      if (explanation.error) explained.delete(rule.id);
+      else explained.set(rule.id, { state: 'done', model, explanation });
+      drawMarkers();
+      drawVerification();
+      refreshTelemetry();
+    })
+    .catch(() => { explained.delete(rule.id); drawMarkers(); });
+}
+
+async function score() {
+  finding = await (await fetch('/api/score', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ lines: spoken }),
+  })).json();
+  render();
+  for (const rule of finding.firedRules) explainIfNew(rule);
+}
+
+function stop() {
+  clearInterval(timer);
+  timer = null;
+  $('play').disabled = false;
+  $('liveflag').innerHTML = '';
+}
+
+function select() {
+  stop();
+  call = DATA.calls[Number($('pick').value)];
+  spoken = [];
+  explained.clear();
+  finding = { total: 0, level: 'LOW', action: 'No markers yet.', firedRules: [], combinations: [] };
+  $('scenario').textContent = call.note;
+  $('outcome').textContent = '';
+  $('outcome').style.color = '';
+  $('btn-hold').disabled = $('btn-release').disabled = true;
+  render();
 }
 
 $('play').onclick = () => {
   spoken = [];
+  explained.clear();
   $('play').disabled = true;
   $('liveflag').innerHTML = '<span class="live">call in progress</span>';
   let i = 0;
-
   timer = setInterval(async () => {
     if (i >= call.lines.length) {
       stop();
-      // Call over: full pass, including AMD inference and verification.
-      const result = await (await fetch('/api/analyse', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ lines: spoken, language: call.language }),
-      })).json();
-      drawTranscript(result);
-      paint(result);
-      paintVerification(result);
-      refreshTelemetry();
       $('btn-hold').disabled = $('btn-release').disabled = false;
       return;
     }
-
     spoken.push(call.lines[i++]);
-
-    // Rules only while the call runs: instant, no model in the loop.
-    const finding = await (await fetch('/api/score', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ lines: spoken }),
-    })).json();
-    drawTranscript(finding);
-    paint(finding);
+    await score();
   }, PACE);
 };
 
+/** Parse the free-text editor into speaker-tagged lines. */
+function parseOwn(text) {
+  return text.split('\n').map((raw) => raw.trim()).filter(Boolean).map((raw) => {
+    const m = raw.match(/^(caller|staff|chiamante|operatore)\s*:\s*(.*)$/i);
+    if (!m) return { speaker: 'caller', text: raw };
+    return { speaker: /^(staff|operatore)$/i.test(m[1]) ? 'staff' : 'caller', text: m[2] };
+  });
+}
+
+$('run-own').onclick = async () => {
+  const lines = parseOwn($('own').value);
+  if (!lines.length) return;
+  stop();
+  call = { language: 'it', lines };
+  spoken = lines;
+  explained.clear();
+  $('run-own').disabled = true;
+  $('ownflag').innerHTML = '<span class="live">analysing</span>';
+  await score();
+  $('run-own').disabled = false;
+  $('ownflag').innerHTML = '';
+  $('btn-hold').disabled = $('btn-release').disabled = false;
+};
+
+$('clear-own').onclick = () => { $('own').value = ''; $('own').focus(); };
 $('reset').onclick = select;
+
+function tab(which) {
+  const own = which === 'own';
+  $('tab-own').setAttribute('aria-selected', String(own));
+  $('tab-replay').setAttribute('aria-selected', String(!own));
+  $('pane-own').hidden = !own;
+  $('pane-replay').hidden = own;
+}
+$('tab-own').onclick = () => tab('own');
+$('tab-replay').onclick = () => tab('replay');
+
 $('btn-hold').onclick = () => {
+  $('outcome').style.color = 'var(--low)';
   $('outcome').textContent = 'Held and logged. Second signature requested — nothing moved.';
 };
 $('btn-release').onclick = () => {

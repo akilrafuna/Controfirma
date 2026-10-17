@@ -16,9 +16,9 @@ import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { TEST_CALLS } from './testcalls.js';
-import { analyseCall } from './pipeline.js';
+import { analyseCall, explainOne } from './pipeline.js';
 import { scoreCall, RULES, BANDS } from './rules.js';
-import { telemetrySnapshot, usingMock } from './amd.js';
+import { telemetrySnapshot, usingMock, listModels, defaultModel } from './amd.js';
 
 const PORT = process.env.PORT ?? 3000;
 const PUBLIC_DIR = join(fileURLToPath(new URL('../public', import.meta.url)));
@@ -75,7 +75,30 @@ const server = createServer(async (req, res) => {
       rules: RULES.map(({ id, label, weight, note }) => ({ id, label, weight, note })),
       bands: BANDS,
       mock: usingMock,
+      models: await listModels(),
+      defaultModel,
     });
+  }
+
+  // One marker, explained on its own, so the console can show a reason while the
+  // caller is still speaking instead of waiting for the call to end.
+  if (url.pathname === '/api/explain' && req.method === 'POST') {
+    const body = await readBody(req);
+    if (!body || !Array.isArray(body.lines)) return json(res, 400, { error: 'lines[] required' });
+
+    // Re-score server-side: the rule object carries the cited evidence spans, and
+    // the client is not trusted to supply those.
+    const rule = scoreCall(body.lines).firedRules.find((r) => r.id === body.ruleId);
+    if (!rule) return json(res, 404, { error: `rule ${body.ruleId} has not fired on this transcript` });
+
+    try {
+      return json(res, 200, await explainOne(body.lines, rule, {
+        language: body.language ?? 'en',
+        model: body.model || defaultModel,
+      }));
+    } catch (err) {
+      return json(res, 500, { error: String(err.message ?? err) });
+    }
   }
 
   if (url.pathname === '/api/telemetry') {
@@ -94,7 +117,8 @@ const server = createServer(async (req, res) => {
     try {
       const result = await analyseCall(body.lines, {
         language: body.language ?? 'en',
-        candidatesPerRule: Math.min(body.candidatesPerRule ?? 6, 16),
+        candidatesPerRule: Math.min(body.candidatesPerRule ?? 4, 16),
+        model: body.model || defaultModel,
       });
       return json(res, 200, result);
     } catch (err) {

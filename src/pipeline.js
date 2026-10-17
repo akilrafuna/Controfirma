@@ -11,8 +11,51 @@
  */
 
 import { scoreCall, scoreProgressive } from './rules.js';
-import { explainRule, telemetrySnapshot } from './amd.js';
+import { explainRule, telemetrySnapshot, defaultModel } from './amd.js';
 import { selectVerified } from './verify.js';
+
+/** Shape one rule's batch into what the console renders. */
+function shapeExplanation(rule, selection, wallMs, serialMs, model) {
+  return {
+    ruleId: rule.id,
+    label: rule.label,
+    weight: rule.weight,
+    note: rule.note,
+    evidence: rule.evidence,
+    model,
+    text: selection.winner?.text ?? null,
+    // When every candidate fails verification we say so rather than showing the
+    // operator something unsourced.
+    unexplained: !selection.winner,
+    generated: selection.generated,
+    passed: selection.passed.length,
+    failed: selection.failed.length,
+    rejected: selection.rejected.map((r) => ({
+      text: r.text,
+      reason: r.verification.reason,
+      badQuote: r.verification.badQuote ?? null,
+    })),
+    wallMs,
+    serialMs,
+  };
+}
+
+/**
+ * Explain a single marker.
+ *
+ * The console calls this the moment a rule fires rather than waiting for the
+ * call to end, so the operator reads the reason while the caller is still
+ * talking — which is the only time it is any use.
+ */
+export async function explainOne(lines, rule, options = {}) {
+  const { language = 'en', candidatesPerRule = 4, model = defaultModel } = options;
+  const { candidates, wallMs, serialMs } = await explainRule(rule, lines, language, candidatesPerRule, model);
+  const selection = selectVerified(candidates, lines);
+  return {
+    ...shapeExplanation(rule, selection, wallMs, serialMs, model),
+    telemetry: telemetrySnapshot(),
+  };
+}
 
 /**
  * Analyse a complete call.
@@ -24,7 +67,7 @@ export async function analyseCall(lines, options = {}) {
   // An operator mid-call reads the top reasons, not all of them. Capping the
   // explained markers keeps the screen readable and the request count sane on a
   // shared endpoint; every marker is still scored, shown and cited regardless.
-  const { language = 'en', candidatesPerRule = 4, explain = true, explainTop = 3 } = options;
+  const { language = 'en', candidatesPerRule = 4, explain = true, explainTop = 3, model = defaultModel } = options;
 
   const finding = scoreCall(lines);
 
@@ -41,35 +84,12 @@ export async function analyseCall(lines, options = {}) {
   // Every fired rule is explained concurrently, and each rule's explanation is
   // itself a concurrent batch. One call therefore becomes firedRules × candidates
   // short completions in flight at once.
-  const batches = await Promise.all(
+  const explanations = await Promise.all(
     finding.firedRules.slice(0, explainTop).map(async (rule) => {
-      const { candidates, wallMs, serialMs } = await explainRule(rule, lines, language, candidatesPerRule);
-      const selection = selectVerified(candidates, lines);
-      return { rule, selection, wallMs, serialMs };
+      const { candidates, wallMs, serialMs } = await explainRule(rule, lines, language, candidatesPerRule, model);
+      return shapeExplanation(rule, selectVerified(candidates, lines), wallMs, serialMs, model);
     }),
   );
-
-  const explanations = batches.map(({ rule, selection, wallMs, serialMs }) => ({
-    ruleId: rule.id,
-    label: rule.label,
-    weight: rule.weight,
-    note: rule.note,
-    evidence: rule.evidence,
-    text: selection.winner?.text ?? null,
-    // When every candidate fails verification we say so rather than showing the
-    // operator something unsourced.
-    unexplained: !selection.winner,
-    generated: selection.generated,
-    passed: selection.passed.length,
-    failed: selection.failed.length,
-    rejected: selection.rejected.map((r) => ({
-      text: r.text,
-      reason: r.verification.reason,
-      badQuote: r.verification.badQuote ?? null,
-    })),
-    wallMs,
-    serialMs,
-  }));
 
   const rejected = explanations.flatMap((e) => e.rejected);
 

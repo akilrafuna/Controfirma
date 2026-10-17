@@ -71,7 +71,20 @@ Measured on AMD with `Gemma-4-31B-IT`: **0 of 64 explanations rejected.** Proper
 instructed, it quotes verbatim every time.
 
 That number is the point, not a disappointment. The gate is what makes the model
-*replaceable*. `node src/benchmark.js` runs the same task across six models served on
+*replaceable* — and the console's model picker lets you prove it on the same call:
+
+| model | returned | verified | rejected |
+|---|---|---|---|
+| `Gemma-4-31B-IT` | 12 | **12** | 0 |
+| `MiniCPM5-2B` | 16 | **0** | **16** |
+
+Every `MiniCPM5-2B` response leaked its own reasoning, in English, into what an employee
+would have read as evidence — *"We need to respond in Italian, at most two short
+sentences…"*. All sixteen were rejected, and the markers fell back to standing on their
+own cited evidence.
+
+That is the failure mode that matters. A weak model does not make the product wrong, it
+makes it quieter. `node src/benchmark.js` runs the same task across six models served on
 AMD, and two of them produced output that would otherwise have been shown to an
 employee as evidence during a live call:
 
@@ -111,8 +124,16 @@ node src/eval.js        # the evaluation table above
 ```
 
 Pick a call, press **Start call**, and the transcript arrives line by line the way it
-would be spoken. Risk climbs as the caller talks. Markers appear with the exact words
-that triggered them highlighted in the transcript.
+would be spoken. Risk climbs as the caller talks, and each marker's explanation is
+requested the moment that marker fires rather than at the end — a reason that arrives
+after the call is over is of no use to anyone.
+
+**Write your own** takes a transcript you type yourself, so you can try to get a call
+past it. One line each, prefixed `caller:` or `staff:`. Only the caller's words are ever
+used as evidence.
+
+The **model picker** switches which AMD-served model writes the explanations, without
+touching the rules. Swapping to a weaker one is the fastest way to see the verifier work.
 
 ### AMD configuration
 
