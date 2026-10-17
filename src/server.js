@@ -19,6 +19,7 @@ import { TEST_CALLS } from './testcalls.js';
 import { analyseCall, explainOne } from './pipeline.js';
 import { scoreCall, RULES, BANDS } from './rules.js';
 import { telemetrySnapshot, usingMock, listModels, defaultModel } from './amd.js';
+import { generateCall, PRESETS } from './generate.js';
 
 const PORT = process.env.PORT ?? 3000;
 const PUBLIC_DIR = join(fileURLToPath(new URL('../public', import.meta.url)));
@@ -77,7 +78,29 @@ const server = createServer(async (req, res) => {
       mock: usingMock,
       models: await listModels(),
       defaultModel,
+      presets: PRESETS,
     });
+  }
+
+  // Describe a call in plain words; an open model on AMD writes it, and the rules
+  // then score it cold. The generator is never told what the rules look for.
+  if (url.pathname === '/api/generate' && req.method === 'POST') {
+    const body = await readBody(req);
+    if (!body?.description) return json(res, 400, { error: 'description required' });
+    if (usingMock) return json(res, 503, { error: 'Generating a call needs a real model. Set AMD_API_KEY.' });
+
+    try {
+      const generated = await generateCall(String(body.description).slice(0, 600), {
+        intent: ['legit', 'fraud', 'auto'].includes(body.intent) ? body.intent : 'auto',
+        language: body.language === 'it' ? 'it' : 'en',
+        model: body.model || defaultModel,
+      });
+      if (generated.error) return json(res, 502, generated);
+      // Score it here so the transcript and its verdict can never drift apart.
+      return json(res, 200, { ...generated, finding: scoreCall(generated.lines) });
+    } catch (err) {
+      return json(res, 500, { error: String(err.message ?? err) });
+    }
   }
 
   // One marker, explained on its own, so the console can show a reason while the

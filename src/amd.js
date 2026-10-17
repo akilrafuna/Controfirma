@@ -103,7 +103,12 @@ function buildPrompt(rule, lines, language) {
   ];
 }
 
-async function callOnce(rule, lines, language, temperature, model = MODEL) {
+/**
+ * One completion against the endpoint, gated, rate-limited and retried.
+ * Everything that talks to AMD goes through here so the telemetry stays true.
+ */
+export async function complete(messages, options = {}) {
+  const { model = MODEL, temperature = 0.3, maxTokens = 300, timeoutMs = 60000 } = options;
   const started = Date.now();
   let lastError = 'unknown';
 
@@ -116,13 +121,8 @@ async function callOnce(rule, lines, language, temperature, model = MODEL) {
           'content-type': 'application/json',
           authorization: `Bearer ${API_KEY}`,
         },
-        body: JSON.stringify({
-          model,
-          messages: buildPrompt(rule, lines, language),
-          temperature,
-          max_tokens: 300,
-        }),
-        signal: AbortSignal.timeout(60000),
+        body: JSON.stringify({ model, messages, temperature, max_tokens: maxTokens }),
+        signal: AbortSignal.timeout(timeoutMs),
       });
 
       if (res.status === 429 || res.status >= 500) {
@@ -168,6 +168,11 @@ async function callOnce(rule, lines, language, temperature, model = MODEL) {
   telemetry.failures += 1;
   telemetry.lastError = lastError;
   return { text: '', latency: Date.now() - started, temperature, error: lastError };
+}
+
+/** One candidate explanation for one fired rule. */
+function callOnce(rule, lines, language, temperature, model) {
+  return complete(buildPrompt(rule, lines, language), { model, temperature, maxTokens: 300 });
 }
 
 /** Deterministic stand-in so the pipeline is demonstrable with no credentials. */

@@ -55,6 +55,19 @@ export const RULES = [
     note: 'Payment controls exist precisely so that no single phone call can move money. Asking to go around them is the attack.',
     patterns: [
       /\b(?:skip|bypass|go\s+around|work\s+around|without)\s+(?:the\s+)?(?:usual\s+)?(?:approval|authorisation|authorization|procedure|process|sign[- ]?off|double[- ]?check|four[- ]eyes)\b/giu,
+      // Softly phrased bypasses. An attacker rarely says "bypass"; they say
+      // "so we don't have to go through the usual chain".
+      /\b(?:do\s*n[o']?t|don't|doesn[o']?t|avoid|rather\s+not|no\s+need\s+to)\s+(?:have\s+to\s+)?(?:go|going)\s+through\s+(?:the\s+)?(?:whole\s+|full\s+|usual\s+|normal\s+|entire\s+)?(?:approval|authorisation|authorization|process|procedure|chain|system|channels?)\b/giu,
+      /\bprocess\s+(?:it|this|that)\s+manually\b/giu,
+      /\b(?:just\s+)?push\s+(?:it|this|that)\s+through\b/giu,
+      /\b(?:just\s+)?get\s+(?:this|it)\s+done\s+(?:for\s+me|now|today)\b/giu,
+      /\b(?:i|I)\s*(?:'ll|’ll|\s+will)\s+(?:handle|sort|deal\s+with|take\s+care\s+of)\s+(?:the\s+)?(?:paperwork|admin|forms?|approval|sign[- ]?off|rest)\b/giu,
+      // Pay now, document later. The paper trail is promised, never delivered.
+      /\b(?:just\s+)?process\s+(?:it|this|the\s+payment)\s+(?:now|first|today)\b/giu,
+      /\b(?:i|I)\s*(?:'ll|’ll|\s+will)\s+send\s+(?:you\s+|over\s+)?the\s+(?:confirmation|paperwork|invoice|documentation|formal\s+\w+|details)\s+(?:right\s+)?(?:after|afterwards|later|once)\b/giu,
+      /\b(?:le\s+)?(?:mando|invio|manderò)\s+(?:poi|dopo|successivamente)\s+(?:la\s+|il\s+|l['’])?(?:conferma|documentazione|fattura|ordine)\b/giu,
+      /\bsave\s+you\s+the\s+(?:paperwork|hassle|trouble|admin)\b/giu,
+      /\b(?:faccio|sistemo|penso\s+io\s+a)\s+(?:io\s+)?(?:la\s+)?(?:pratica|burocrazia|documentazione|carte)\b/giu,
       /\b(?:salt(?:i|are)|bypassare|aggirare|senza)\s+(?:la\s+|il\s+)?(?:solita\s+)?(?:procedura|approvazione|autorizzazione|firma|doppia\s+firma|controllo)\b/giu,
       /\b(?:no\s+need|not\s+necessary|non\s+serve|non\s+è\s+necessario)\s+(?:for|to|di|la)?\s*(?:the\s+)?(?:second|another|altra|seconda)\s+(?:signature|approval|firma|approvazione)\b/giu,
       /\b(?:i|I)\s+(?:will|'ll)\s+authorise\s+it\s+(?:myself|later)\b/giu,
@@ -73,6 +86,10 @@ export const RULES = [
       /\b(?:non|niente)\s+(?:ne\s+)?(?:parli|dica|dire|parlare|informi|coinvolga|coinvolgere)\b/giu,
       /\b(?:keep|hold)\s+(?:this|it)\s+(?:strictly\s+)?(?:between\s+us|confidential|quiet|secret)\b/giu,
       /\b(?:resti|rimanga|tenga)\s+(?:tra\s+noi|riservato|confidenziale|segreto)\b/giu,
+      // The noun form is how it is actually said: "per mantenere la massima riservatezza".
+      /\b(?:massima\s+|assoluta\s+)?riservatezza\b/giu,
+      /\b(?:in\s+via\s+)(?:riservata|confidenziale)\b/giu,
+      /\b(?:strict(?:est)?|complete|absolute)\s+(?:confidentiality|discretion)\b/giu,
       /\b(?:without|senza)\s+(?:informing|telling|informare|avvisare|dirlo\s+a)\b/giu,
       /\b(?:not|non)\s+(?:even|nemmeno|neanche)\s+(?:the|il|la|ai|alla)\s*(?:cfo|ceo|board|compliance|legal|team|consiglio|direzione)\b/giu,
     ],
@@ -100,7 +117,8 @@ export const RULES = [
     note: 'A confidential acquisition or a secret investigation is the standard cover story for false-lawyer fraud. It explains the secrecy and the hurry at once.',
     patterns: [
       /\b(?:confidential|secret|undisclosed)\s+(?:acquisition|transaction|operation|deal|merger|investigation|audit)\b/giu,
-      /\b(?:operazione|acquisizione|transazione|indagine|verifica)\s+(?:riservata|confidenziale|segreta)\b/giu,
+      // Words often sit between: "l'operazione di acquisizione in corso, quella riservata".
+      /\b(?:operazione|acquisizione|transazione|indagine|verifica)\b[^.?!]{0,34}\b(?:riservat[ao]|confidenziale|segret[ao])\b/giu,
       /\b(?:under|sotto)\s+(?:nda|segreto|embargo)\b/giu,
       /\b(?:regulator|consob|bankitalia|banca\s+d'italia|guardia\s+di\s+finanza)\b.{0,50}\b(?:aware|informed|non\s+sa|informata)\b/giu,
       /\b(?:ongoing|in\s+corso)\s+(?:investigation|indagine)\b/giu,
@@ -113,7 +131,9 @@ export const RULES = [
     weight: 15,
     note: 'Fear shortens thinking. Blocked accounts, lost deals and legal trouble are manufactured to stop you checking.',
     patterns: [
-      /\b(?:account|card|conto|carta)\s+(?:will\s+be\s+|sarà\s+|viene\s+)?(?:blocked|suspended|frozen|bloccat[oa]|sospes[oa])\b/giu,
+      // Allow words between the noun and the consequence: "make sure the account
+      // doesn't get suspended" is the same threat as "your account will be blocked".
+      /\b(?:account|card|service|conto|carta|servizio)\b[^.?!]{0,45}\b(?:blocked|suspended|frozen|cut\s+off|bloccat[oa]|sospes[oa]|disattivat[oa])\b/giu,
       /\b(?:legal\s+action|denuncia|azione\s+legale|conseguenze\s+legali|sanction|sanzione)\b/giu,
       /\b(?:you\s+will\s+be|sarà|sarai)\s+(?:held\s+)?(?:responsible|liable|responsabile)\b/giu,
       /\b(?:lose|perdere|perdiamo|we\s+lose)\s+(?:the\s+)?(?:deal|contract|operazione|contratto|cliente)\b/giu,
@@ -128,10 +148,13 @@ export const RULES = [
     note: 'Urgency alone is ordinary business. It only becomes a signal when it arrives with secrecy or a bypass request.',
     patterns: [
       /\b(?:urgent(?:ly)?|immediately|right\s+now|straight\s+away|asap)\b/giu,
-      /\b(?:urgent(?:e|issimo)?|subito|immediatamente|adesso|al\s+più\s+presto)\b/giu,
-      /\b(?:within|entro|before|prima\s+di)\s+(?:the\s+next\s+)?(?:\d+\s*(?:minutes?|minuti|hours?|ore)|an?\s+hour|un'?\s*ora|mezz'?ora|today|oggi|noon|mezzogiorno|closing|chiusura)\b/giu,
+      /\b(?:urgent(?:e|issimo|emente)?|urgenza|subito|immediatamente|adesso|al\s+più\s+presto|in\s+giornata)\b/giu,
+      /\b(?:in|within|entro|before|by|prima\s+d(?:i|el|ella|ell['’]))\s+(?:the\s+next\s+)?(?:\d+\s*(?:minutes?|minuti|hours?|ore)|an?\s+hour|un'?\s*ora|mezz'?ora|today|oggi|noon|mezzogiorno|closing|chiusura|close\s+of\s+(?:business|play)|the\s+weekend|end\s+of\s+(?:day|the\s+day)|fine\s+giornata)\b/giu,
       /\b(?:deadline|scadenza)\s+(?:is\s+)?(?:today|oggi|in\s+\d+)/giu,
       /\b(?:no|non\s+c'è)\s+(?:time|tempo)\b/giu,
+      /\b(?:in\s+a\s+)?(?:bit\s+of\s+a\s+)?(?:rush|hurry)\b/giu,
+      /\b(?:ho|abbiamo)\s+(?:molta\s+)?fretta\b/giu,
+      /\b(?:needs?|has|have)\s+to\s+(?:clear|go\s+out|be\s+(?:done|paid|sent|made|processed))\s+(?:today|now|before|by|in)\b/giu,
     ],
   },
 
@@ -141,7 +164,7 @@ export const RULES = [
     weight: 10,
     note: 'Impersonation needs a borrowed identity. Common in fraud, but also in entirely genuine calls, so it carries little weight alone.',
     patterns: [
-      /\b(?:this\s+is|i\s+am|sono|parla)\s+(?:the\s+|il\s+|la\s+)?(?:ceo|cfo|chairman|president|amministratore\s+delegato|direttore\s+generale|presidente)\b/giu,
+      /\b(?:this\s+is|i\s+am|i'm|sono|parla)\s+(?:the\s+|your\s+|il\s+|la\s+|il\s+suo\s+)?(?:ceo|cfo|coo|chairman|president|managing\s+director|finance\s+director|director|manager|head\s+of\s+[a-z]+|boss|owner|amministratore\s+delegato|direttore\s+generale|direttore|presidente|titolare|responsabile)\b/giu,
       /\b(?:i\s+am|this\s+is|sono|parla)\s+(?:your|the|il|l')\s*(?:lawyer|solicitor|counsel|avvocato|notaio|notary)\b/giu,
       /\b(?:calling|chiamo|parlo)\s+(?:from|da|a\s+nome\s+di)\s+(?:the\s+)?(?:bank|fraud\s+team|security\s+team|banca|ufficio\s+antifrode|polizia|carabinieri|guardia\s+di\s+finanza)\b/giu,
       /\b(?:on\s+behalf\s+of|per\s+conto\s+di)\s+(?:the\s+)?(?:ceo|chairman|board|amministratore|presidente)\b/giu,
@@ -159,6 +182,10 @@ export const RULES = [
       /\b(?:personal|private|personale|privato)\s+(?:mobile|phone|number|cellulare|numero)\b/giu,
       /\b(?:new|different|nuovo|altro)\s+(?:number|numero)\b/giu,
       /\b(?:my|il\s+mio)\s+(?:other|altro)\s+(?:phone|telefono|numero)\b/giu,
+      // Bank details dictated aloud leave no record anyone can check later.
+      /\b(?:give|read|dictate|pass)\s+(?:you\s+)?(?:the\s+)?(?:new\s+)?(?:iban|account\s+(?:number|details)|bank\s+details)\s+(?:to\s+you\s+)?over\s+the\s+phone\b/giu,
+      /\b(?:le\s+)?(?:detto|dettare)\s+(?:io\s+)?(?:l['’])?(?:iban|le\s+coordinate|i\s+dati)\b/giu,
+      /\b(?:only\s+)?(?:verbally|a\s+voce|solo\s+verbalmente)\b/giu,
     ],
   },
 ];

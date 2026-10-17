@@ -100,6 +100,39 @@ employee as evidence during a live call:
 Without the gate, choosing a model would be an act of faith. With it, a bad model
 degrades into "no explanation available" instead of into a fabricated quote.
 
+### Generated calls: a blind test, and what it found
+
+`node src/gentest.js` describes six situations in plain English and Italian, has an open
+model on AMD write each call, and scores the result cold.
+
+**The generator is never shown the markers, the weights, or anything about how scoring
+works.** If it were, it would write our own keywords back at us and prove nothing. It gets
+a scenario the way you would describe one to an actor.
+
+Two of the presets exist to make one point: **the amount is not a signal.** An honest
+€1.2 billion bond settlement scores 12 and stays `LOW`. A fraudulent €200 invoice is
+flagged. What is being asked for decides, not how much.
+
+The first run scored **4 of 6**, and the two failures were real gaps — our own eval set
+had been written by the same person who wrote the patterns, so it matched them. The
+generator wrote English and Italian a real caller would use and walked straight past:
+
+| missed | why |
+|---|---|
+| “I am the manager” | the authority list had ceo/cfo/lawyer, not manager |
+| “needs to clear in the next hour” | the time pattern wanted *within* an hour, not *in* |
+| “so we don’t have to go through the full approval chain” | a bypass phrased as going *through*, not *around* |
+| “prima della chiusura” | the Italian pattern only had `prima di` |
+| “un’urgenza concordata” | `urgente` was covered, the noun `urgenza` was not |
+| “mantenere la massima riservatezza” | secrecy as a noun, not “non ne parli” |
+| “I’ll send the confirmation right after” | pay now, document later |
+| “give you the new IBAN over the phone” | bank details with no written record |
+
+All are now covered, and the scripted eval still shows 0 false alarms. Runs since score
+**4–5 of 6**: the generator writes a different call every time at temperature 0.85 and
+reliably finds the soft end of the distribution, which is the point of it. We stopped
+tuning there rather than overfit to generated text.
+
 ### Cost and parallelism, measured
 
 | | |
@@ -130,7 +163,11 @@ after the call is over is of no use to anyone.
 
 **Write your own** takes a transcript you type yourself, so you can try to get a call
 past it. One line each, prefixed `caller:` or `staff:`. Only the caller's words are ever
-used as evidence.
+used as evidence. **Live microphone** feeds speech straight in instead of typing.
+
+**Generate a call** describes a situation in plain words and has an open model on AMD
+write the transcript, which the rules then score cold. See below — this is a test, not a
+toy.
 
 The **model picker** switches which AMD-served model writes the explanations, without
 touching the rules. Swapping to a weaker one is the fastest way to see the verifier work.
@@ -174,7 +211,12 @@ tokens — because an AMD workload nobody can see is not a workload anyone shoul
 - It is not a fraud verdict. `HOLD` means *call back on a number you already had*.
 - The markers cover impersonation fraud. Investment and romance scams have a different
   shape and are out of scope.
-- Speech-to-text is not wired in yet; the console replays transcripts.
+- Live speech uses the browser's own recognition. That proves the pipeline takes live
+  speech, but in a bank it would be an open speech model on the same AMD box, because the
+  audio cannot leave the building. That part is not built.
+- Generated calls score 4–5 of 6 depending on the run. A soft, polite attacker asking for
+  a small sum is genuinely close to an honest supplier with new bank details, and we would
+  rather land on `REVIEW` than invent certainty.
 
 ---
 
@@ -187,7 +229,10 @@ tokens — because an AMD workload nobody can see is not a workload anyone shoul
 | `src/amd.js` | AMD inference client, parallel batching, telemetry |
 | `src/pipeline.js` | score → explain → verify, in that order |
 | `src/testcalls.js` | the ten-call evaluation set |
+| `src/generate.js` | writes a call from a plain-words scenario, blind to the rules |
 | `src/eval.js` | prints the results table |
+| `src/gentest.js` | generates the preset scenarios and scores them cold |
+| `src/benchmark.js` | the same task across six models served on AMD |
 | `src/server.js` | operator console server |
 | `public/index.html` | the console |
 

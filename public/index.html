@@ -169,6 +169,7 @@
     <div class="tabs">
       <button id="tab-replay" aria-selected="true">Replay a call</button>
       <button id="tab-own" aria-selected="false">Write your own</button>
+      <button id="tab-generate" aria-selected="false">Generate a call</button>
     </div>
 
     <div id="pane-replay">
@@ -186,8 +187,31 @@
       <p class="hint">One line each. Start a line with <code>caller:</code> or <code>staff:</code> — anything unmarked counts as the caller. Only the caller's words are ever used as evidence.</p>
       <div class="controls">
         <button class="primary" id="run-own">Analyse this call</button>
+        <button id="mic">Live microphone</button>
         <button id="clear-own">Clear</button>
         <span id="ownflag"></span>
+      </div>
+      <p class="hint" id="mic-note" hidden>Speech recognition runs in your browser, which is enough to show the pipeline takes live speech. In a bank it would be an open speech model on the same AMD box, because the audio cannot leave the building.</p>
+    </div>
+
+    <div id="pane-generate" hidden>
+      <div class="controls">
+        <select id="preset"><option value="">Start from a preset scenario…</option></select>
+        <select id="gen-intent" style="flex:0 1 190px">
+          <option value="auto">Model decides</option>
+          <option value="legit">Make it honest</option>
+          <option value="fraud">Make it fraudulent</option>
+        </select>
+        <select id="gen-lang" style="flex:0 1 140px">
+          <option value="en">English</option>
+          <option value="it">Italiano</option>
+        </select>
+      </div>
+      <textarea id="gen-desc" spellcheck="false" style="min-height:110px" placeholder="Describe the call. For example: the group treasurer rings to move 1.2 billion euros for a bond settlement finance already knows about."></textarea>
+      <p class="hint">An open model on AMD writes the transcript, then the rules score it <b>cold</b>. The generator is never told what the markers are — otherwise it would just write our own keywords back at us.</p>
+      <div class="controls">
+        <button class="primary" id="run-gen">Generate and analyse</button>
+        <span id="genflag"></span>
       </div>
     </div>
 
@@ -254,6 +278,11 @@ async function boot() {
     .map((m) => `<option value="${m}"${m === DATA.defaultModel ? ' selected' : ''}>${m}</option>`)
     .join('');
   $('own').value = SAMPLE;
+  $('preset').innerHTML =
+    '<option value="">Start from a preset scenario…</option>' +
+    (DATA.presets ?? [])
+      .map((p, i) => `<option value="${i}">${escape(p.label)}</option>`)
+      .join('');
   $('pick').onchange = select;
   select();
   if (DATA.mock) {
@@ -455,14 +484,120 @@ $('clear-own').onclick = () => { $('own').value = ''; $('own').focus(); };
 $('reset').onclick = select;
 
 function tab(which) {
-  const own = which === 'own';
-  $('tab-own').setAttribute('aria-selected', String(own));
-  $('tab-replay').setAttribute('aria-selected', String(!own));
-  $('pane-own').hidden = !own;
-  $('pane-replay').hidden = own;
+  for (const name of ['replay', 'own', 'generate']) {
+    $(`tab-${name}`).setAttribute('aria-selected', String(name === which));
+    $(`pane-${name}`).hidden = name !== which;
+  }
 }
-$('tab-own').onclick = () => tab('own');
-$('tab-replay').onclick = () => tab('replay');
+for (const name of ['replay', 'own', 'generate']) $(`tab-${name}`).onclick = () => tab(name);
+
+// ── Generate a call ───────────────────────────────────────────────────────────
+
+$('preset').onchange = () => {
+  const preset = DATA.presets[Number($('preset').value)];
+  if (!preset) return;
+  $('gen-desc').value = preset.description;
+  $('gen-intent').value = preset.intent;
+  $('gen-lang').value = preset.language;
+};
+
+$('run-gen').onclick = async () => {
+  const description = $('gen-desc').value.trim();
+  if (!description) return;
+  stop();
+  explained.clear();
+  $('run-gen').disabled = true;
+  $('genflag').innerHTML = '<span class="live">writing the call</span>';
+
+  try {
+    const res = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        description,
+        intent: $('gen-intent').value,
+        language: $('gen-lang').value,
+        model: $('model').value,
+      }),
+    });
+    const generated = await res.json();
+
+    if (generated.error) {
+      $('genflag').innerHTML = `<span style="color:var(--hold);font-size:12px">${escape(generated.error)}</span>`;
+      return;
+    }
+
+    // Drop it into the editor too, so it can be tweaked and re-run by hand.
+    $('own').value = generated.lines.map((l) => `${l.speaker}: ${l.text}`).join('\n');
+    call = { language: $('gen-lang').value, lines: generated.lines };
+    spoken = generated.lines;
+    finding = generated.finding;
+    render();
+    for (const rule of finding.firedRules) explainIfNew(rule);
+    $('btn-hold').disabled = $('btn-release').disabled = false;
+    $('genflag').innerHTML = '';
+  } catch (err) {
+    $('genflag').innerHTML = '<span style="color:var(--hold);font-size:12px">generation failed</span>';
+  } finally {
+    $('run-gen').disabled = false;
+  }
+};
+
+// ── Live microphone ───────────────────────────────────────────────────────────
+
+const SpeechRecognition = window.SpeechRecognition ?? window.webkitSpeechRecognition;
+let recogniser = null;
+
+if (!SpeechRecognition) {
+  $('mic').disabled = true;
+  $('mic').title = 'This browser has no speech recognition';
+}
+
+$('mic').onclick = () => {
+  if (recogniser) {
+    recogniser.stop();
+    return;
+  }
+
+  stop();
+  spoken = [];
+  explained.clear();
+  $('mic-note').hidden = false;
+
+  recogniser = new SpeechRecognition();
+  recogniser.continuous = true;
+  recogniser.interimResults = false;
+  recogniser.lang = $('gen-lang').value === 'it' ? 'it-IT' : 'en-GB';
+
+  recogniser.onresult = async (event) => {
+    for (let i = event.resultIndex; i < event.results.length; i += 1) {
+      if (!event.results[i].isFinal) continue;
+      const text = event.results[i][0].transcript.trim();
+      if (!text) continue;
+      // Everything heard is treated as the caller: it is the caller's words that
+      // are ever used as evidence.
+      spoken.push({ speaker: 'caller', text });
+    }
+    call = { language: $('gen-lang').value, lines: spoken };
+    await score();
+  };
+
+  recogniser.onerror = (event) => {
+    $('ownflag').innerHTML = `<span style="color:var(--hold);font-size:12px">mic: ${escape(event.error)}</span>`;
+  };
+
+  recogniser.onend = () => {
+    recogniser = null;
+    $('mic').textContent = 'Live microphone';
+    $('ownflag').innerHTML = '';
+    $('btn-hold').disabled = $('btn-release').disabled = false;
+    if (spoken.length) $('own').value = spoken.map((l) => `caller: ${l.text}`).join('\n');
+  };
+
+  recogniser.start();
+  $('mic').textContent = 'Stop listening';
+  $('ownflag').innerHTML = '<span class="live">listening</span>';
+};
 
 $('btn-hold').onclick = () => {
   $('outcome').style.color = 'var(--low)';

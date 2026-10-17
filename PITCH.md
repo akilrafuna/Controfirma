@@ -95,10 +95,23 @@ Run `node --env-file-if-exists=.env src/server.js`, open `localhost:3000`.
    it." Let them read one.
 6. Say: *"A weak model doesn't make us wrong. It makes us quieter."*
 
-**Part three — hand it over (30 s)**
-7. Give the laptop to a judge. *"Write me a scam call that gets past it."*
+**Part three — the amount is not a signal (30 s)**
+7. **Generate a call** tab → preset *"Honest — but asks for €1.2 billion"* → **Generate
+   and analyse**. An open model on AMD writes the call; the rules score it cold.
+8. It stays **LOW**. Say: *"A billion two hundred million euros, and it doesn't care.
+   What's being asked for decides, not how much."*
 
-That third one is the whole pitch. Don't skip it.
+**Part four — hand it over (30 s)**
+9. Give the laptop to a judge. *"Write me a scam call that gets past it."* Or hit **Live
+   microphone** and let them try it out loud.
+
+Part four is the whole pitch. Don't skip it.
+
+> **Demo safety.** Generate the *honest* €1.2 billion one live — it lands reliably. For
+> the fraud side use the scripted replay, which is deterministic. Generated fraud calls
+> score 4–5 of 6 across runs, and you do not want to roll that dice on stage. If you do
+> generate a fraud call and it comes out `REVIEW` rather than `HOLD`, that is the correct
+> answer for a soft attacker and you should say so.
 
 ---
 
@@ -149,8 +162,15 @@ markers are the asks themselves, which the attacker can't drop without dropping 
 attack.
 
 **"Where's the speech-to-text?"**
-Not wired in. The console replays transcripts. That's the next piece of work and we're not
-going to pretend otherwise.
+Hit the Live microphone button — it takes live speech now. But be straight about what it
+is: that's the browser's own recogniser, which is fine for showing the pipeline accepts
+live speech and wrong for a bank, because the audio would leave the building. In
+production it's an open speech model on the same AMD box. That part isn't built.
+
+**"Could I try to beat it?"**
+Yes — hand them the laptop. Write-your-own, or the microphone. If they get a call past
+it, say so out loud and show them which marker was missing; that is a better answer than
+a save. The generator already found eight gaps like that and they're listed in the README.
 
 **"Is 10 calls a real evaluation?"**
 No. It's a starting harness with the hard half included on purpose. Say that plainly.
@@ -177,8 +197,9 @@ person signs. 5 of 5 frauds held, 0 of 5 genuine calls disturbed.
 
 ## 9. Honest limits — say these before a judge finds them
 
-- No speech-to-text yet; transcripts are replayed.
-- Ten calls is a harness, not a validation.
+- Live speech is the browser's recogniser, not an open model on AMD. Production would
+  keep the audio in the building; that isn't built.
+- Ten scripted calls is a harness, not a validation. Generated calls run 4–5 of 6.
 - Marker lists are drawn from published fraud patterns, not from a bank's real call data.
 - Covers impersonation fraud only. Investment and romance scams have a different shape.
 - The free endpoint rate-limits at ~3 requests/sec; about 15% of calls get retried or lost.
