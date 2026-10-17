@@ -1,0 +1,14 @@
+{
+  "name": "controfirma",
+  "version": "0.1.0",
+  "description": "Real-time impersonation and voice-clone fraud detection for business payment calls. Rules decide, the model explains, a human approves.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "eval": "node src/eval.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
